@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
-import { RagStore, Document, QueryResult, CustomMetadata } from '../types';
+import { QueryResult } from '../types';
 
 let ai: GoogleGenAI;
 
@@ -42,7 +42,7 @@ export async function fileSearch(ragStoreName: string, query: string): Promise<Q
     if (!ai) throw new Error("Gemini AI not initialized");
     const response: GenerateContentResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: query + "DO NOT ASK THE USER TO READ THE MANUAL, pinpoint the relevant sections in the response itself.",
+        contents: `Based on the provided document, answer the following question: "${query}". Provide a direct answer and pinpoint the relevant information from the document. Do not ask the user to read the manual.`,
         config: {
             tools: [
                     {
@@ -66,7 +66,7 @@ export async function generateExampleQuestions(ragStoreName: string): Promise<st
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: "You are provided some user manuals for some products. Figure out for what product each manual is for, based on the cover page contents. DO NOT GUESS OR HALLUCINATE THE PRODUCT. Then, for each product, generate 4 short and practical example questions a user might ask about it in English. Return the questions as a JSON array of objects. Each object should have a 'product' key with the product name as a string, and a 'questions' key with an array of 4 question strings. For example: ```json[{\"product\": \"Product A\", \"questions\": [\"q1\", \"q2\"]}, {\"product\": \"Product B\", \"questions\": [\"q3\", \"q4\"]}]```",
+            contents: `Based on the provided documents, generate 4 short, practical example questions a user might ask about each main product described. Return the questions as a single flat JSON array of strings. For example: ["Question 1 about Product A?", "Question 2 about Product A?", "Question 1 about Product B?"]`,
             config: {
                 tools: [
                     {
@@ -74,54 +74,40 @@ export async function generateExampleQuestions(ragStoreName: string): Promise<st
                             fileSearchStoreNames: [ragStoreName],
                         }
                     }
-                ]
+                ],
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.STRING
+                    }
+                }
             }
         });
         
         let jsonText = response.text.trim();
-
-        const jsonMatch = jsonText.match(/```json\n([\s\S]*?)\n```/);
-        if (jsonMatch && jsonMatch[1]) {
-            jsonText = jsonMatch[1];
-        } else {
-            const firstBracket = jsonText.indexOf('[');
-            const lastBracket = jsonText.lastIndexOf(']');
-            if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-                jsonText = jsonText.substring(firstBracket, lastBracket + 1);
-            }
-        }
-        
         const parsedData = JSON.parse(jsonText);
         
-        if (Array.isArray(parsedData)) {
-            if (parsedData.length === 0) {
-                return [];
-            }
-            const firstItem = parsedData[0];
-
-            // Handle new format: array of {product, questions[]}
-            if (typeof firstItem === 'object' && firstItem !== null && 'questions' in firstItem && Array.isArray(firstItem.questions)) {
-                return parsedData.flatMap(item => (item.questions || [])).filter(q => typeof q === 'string');
-            }
-            
-            // Handle old format: array of strings
-            if (typeof firstItem === 'string') {
-                return parsedData.filter(q => typeof q === 'string');
-            }
+        if (Array.isArray(parsedData) && parsedData.every(item => typeof item === 'string')) {
+            return parsedData;
         }
         
         console.warn("Received unexpected format for example questions:", parsedData);
         return [];
     } catch (error) {
         console.error("Failed to generate or parse example questions:", error);
-        return [];
+         return [
+            "What is the warranty policy?",
+            "How do I clean the product?",
+            "What are the main safety warnings?",
+            "How do I troubleshoot common issues?"
+        ];
     }
 }
 
 
 export async function deleteRagStore(ragStoreName: string): Promise<void> {
     if (!ai) throw new Error("Gemini AI not initialized");
-    // DO: Remove `(as any)` type assertion.
     await ai.fileSearchStores.delete({
         name: ragStoreName,
         config: { force: true },

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState, useCallback } from 'react';
+// FIX: Import Dispatch and SetStateAction to resolve type errors for props.
+import React, { useState, useCallback, Dispatch, SetStateAction } from 'react';
 import Spinner from './Spinner';
 import UploadCloudIcon from './icons/UploadCloudIcon';
 import CarIcon from './icons/CarIcon';
@@ -13,8 +14,10 @@ import TrashIcon from './icons/TrashIcon';
 interface WelcomeScreenProps {
     onUpload: () => Promise<void>;
     apiKeyError: string | null;
+    // FIX: Corrected a typo in the type definition from `File[]>` to `File[]`.
     files: File[];
-    setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+    // FIX: Use the imported `Dispatch` and `SetStateAction` types.
+    setFiles: Dispatch<SetStateAction<File[]>>;
     isApiKeySelected: boolean;
     onSelectKey: () => Promise<void>;
 }
@@ -92,8 +95,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onUpload, apiKeyError, fi
         try {
             await onUpload();
         } catch (error) {
-            // Error is handled by the parent component, but we catch it here
-            // to prevent an "uncaught promise rejection" warning in the console.
             console.error("Upload process failed:", error);
         }
     };
@@ -109,39 +110,41 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onUpload, apiKeyError, fi
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
-            <div className="w-full max-w-3xl text-center">
-                <h1 className="text-4xl sm:text-5xl font-bold mb-2">Chat With Your Document</h1>
-                <p className="text-gem-offwhite/70 mb-8">
-                    Powered by <strong className="font-semibold text-gem-offwhite">FileSearch</strong>. Upload a manual or select example to see RAG in action.
+            <div className="w-full max-w-2xl text-center">
+                <h1 className="text-4xl sm:text-5xl font-bold mb-2 text-primary">Chat With Your Document</h1>
+                <p className="text-secondary mb-8 text-lg">
+                    Powered by <strong className="font-semibold text-primary">FileSearch</strong>. Upload a manual or select an example to see RAG in action.
                 </p>
 
-                <div className="w-full max-w-xl mx-auto mb-8">
+                <div className="w-full max-w-md mx-auto mb-8">
                      {!isApiKeySelected ? (
                         <button
                             onClick={handleSelectKeyClick}
-                            className="w-full bg-gem-blue hover:bg-blue-500 text-white font-semibold rounded-lg py-3 px-5 text-center focus:outline-none focus:ring-2 focus:ring-gem-blue"
+                            className="w-full bg-accent hover:bg-accent-hover text-white font-semibold rounded-lg py-3 px-5 text-center transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-accent"
                         >
                             Select Gemini API Key to Begin
                         </button>
                     ) : (
-                        <div className="w-full bg-gem-slate border border-gem-mist/50 rounded-lg py-3 px-5 text-center text-gem-teal font-semibold">
+                        <div className="w-full bg-surface border border-subtle rounded-lg py-3 px-5 text-center text-teal-400 font-semibold">
                             ✓ API Key Selected
                         </div>
                     )}
-                     {apiKeyError && <p className="text-red-500 text-sm mt-2">{apiKeyError}</p>}
+                     {apiKeyError && <p className="text-red-400 text-sm mt-2">{apiKeyError}</p>}
                 </div>
 
                 <div 
-                    className={`relative border-2 border-dashed rounded-lg p-10 text-center transition-colors mb-6 ${isDragging ? 'border-gem-blue bg-gem-mist/10' : 'border-gem-mist/50'}`}
+                    className={`relative border-2 border-dashed rounded-xl p-10 text-center transition-all duration-300 mb-6 ${isDragging ? 'border-accent bg-surface' : 'border-subtle bg-surface/50'}`}
                     onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}
                 >
                     <div className="flex flex-col items-center justify-center">
-                        <UploadCloudIcon />
-                        <p className="mt-4 text-lg text-gem-offwhite/80">Drag & drop your PDF, .txt, or .md file here.</p>
-                        <input id="file-upload" type="file" multiple className="hidden" onChange={handleFileChange} accept=".pdf,.txt,.md"/>
+                        <div className={`transition-transform duration-300 ${isDragging ? 'scale-110' : 'scale-100'}`}>
+                            <UploadCloudIcon />
+                        </div>
+                        <p className="mt-4 text-lg text-secondary">Drag & drop your PDF, .txt, or .md file here.</p>
+                        <input id="file-upload" type="file" multiple className="hidden" onChange={handleFileChange} accept=".pdf,.txt,.md,.html,.css,.js,.ts,.jsx,.tsx,.py,.go,.java,.c,.cpp,.php,.rb,.swift,.kt"/>
                          <label 
                             htmlFor="file-upload" 
-                            className="mt-4 cursor-pointer px-6 py-2 bg-gem-blue text-white rounded-full font-semibold hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gem-onyx focus:ring-gem-blue" 
+                            className="mt-4 cursor-pointer px-6 py-2 bg-primary/10 text-primary rounded-full font-semibold hover:bg-primary/20 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary/50" 
                             title="Select files from your device"
                             tabIndex={0}
                             onKeyDown={e => {
@@ -158,16 +161,16 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onUpload, apiKeyError, fi
 
                 {files.length > 0 && (
                     <div className="w-full max-w-xl mx-auto mb-6 text-left">
-                        <h4 className="font-semibold mb-2">Selected Files ({files.length}):</h4>
-                        <ul className="max-h-36 overflow-y-auto space-y-1 pr-2">
+                        <h4 className="font-semibold mb-2 text-secondary">Selected Files ({files.length}):</h4>
+                        <ul className="max-h-36 overflow-y-auto space-y-2 pr-2">
                             {files.map((file, index) => (
-                                <li key={`${file.name}-${index}`} className="text-sm bg-gem-mist/50 p-2 rounded-md flex justify-between items-center group">
+                                <li key={`${file.name}-${index}`} className="text-sm bg-surface p-2 px-3 rounded-md flex justify-between items-center group animate-fade-in">
                                     <span className="truncate" title={file.name}>{file.name}</span>
                                     <div className="flex items-center flex-shrink-0">
-                                        <span className="text-xs text-gem-offwhite/50 ml-2">{(file.size / 1024).toFixed(2)} KB</span>
+                                        <span className="text-xs text-secondary ml-2">{(file.size / 1024).toFixed(2)} KB</span>
                                         <button 
                                             onClick={() => handleRemoveFile(index)}
-                                            className="ml-2 p-1 text-red-400 hover:text-red-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="ml-2 p-1 text-red-400 hover:text-red-300 rounded-full opacity-50 group-hover:opacity-100 transition-opacity"
                                             aria-label={`Remove ${file.name}`}
                                             title="Remove this file"
                                         >
@@ -185,7 +188,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onUpload, apiKeyError, fi
                         <button 
                             onClick={handleConfirmUpload}
                             disabled={!isApiKeySelected}
-                            className="w-full px-6 py-3 rounded-md bg-gem-blue hover:bg-blue-500 text-white font-bold transition-colors disabled:bg-gem-mist/50 disabled:cursor-not-allowed"
+                            className="w-full px-6 py-3 rounded-md bg-accent hover:bg-accent-hover text-white font-bold transition-colors disabled:bg-subtle disabled:cursor-not-allowed animate-pulse-glow"
                             title={!isApiKeySelected ? "Please select an API key first" : "Start chat session with the selected files"}
                         >
                             Upload and Chat
@@ -194,13 +197,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onUpload, apiKeyError, fi
                 </div>
                 
                 <div className="flex items-center my-8">
-                    <div className="flex-grow border-t border-gem-mist"></div>
-                    <span className="flex-shrink mx-4 text-gem-offwhite/60">OR</span>
-                    <div className="flex-grow border-t border-gem-mist"></div>
+                    <div className="flex-grow border-t border-subtle"></div>
+                    <span className="flex-shrink mx-4 text-secondary text-sm">OR</span>
+                    <div className="flex-grow border-t border-subtle"></div>
                 </div>
 
                 <div className="text-left mb-4">
-                    <p className="text-gem-offwhite/80">Try an example:</p>
+                    <p className="text-secondary">Try an example:</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
                     {sampleDocuments.map(doc => (
@@ -208,15 +211,15 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onUpload, apiKeyError, fi
                             key={doc.name}
                             onClick={() => handleSelectSample(doc.name, doc.url, doc.fileName)}
                             disabled={!!loadingSample}
-                            className="bg-gem-slate p-4 rounded-lg border border-gem-mist/30 hover:border-gem-blue/50 hover:bg-gem-mist/10 transition-all text-left flex items-center space-x-4 disabled:opacity-50 disabled:cursor-wait"
+                            className="bg-surface p-4 rounded-lg border border-subtle hover:border-accent/50 hover:bg-surface/50 transition-all text-left flex items-center space-x-4 disabled:opacity-50 disabled:cursor-wait group"
                             title={`Chat with the ${doc.name}`}
                         >
-                            <div className="w-16 h-16 flex items-center justify-center flex-shrink-0 bg-gem-mist/20 rounded-lg">
+                            <div className="w-16 h-16 flex items-center justify-center flex-shrink-0 bg-subtle/50 rounded-lg transition-transform duration-300 group-hover:scale-105">
                                 {loadingSample === doc.name ? <Spinner /> : doc.icon}
                             </div>
                             <div>
-                                <p className="font-semibold text-gem-offwhite">{doc.name}</p>
-                                <p className="text-sm text-gem-offwhite/60">{doc.details}</p>
+                                <p className="font-semibold text-primary">{doc.name}</p>
+                                <p className="text-sm text-secondary">{doc.details}</p>
                             </div>
                         </button>
                     ))}

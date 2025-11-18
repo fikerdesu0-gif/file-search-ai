@@ -274,10 +274,10 @@ const App: React.FC = () => {
                 />;
             case AppStatus.Error:
                  return (
-                    <div className="flex flex-col items-center justify-center h-screen bg-red-900/20 text-red-300">
-                        <h1 className="text-3xl font-bold mb-4">Application Error</h1>
-                        <p className="max-w-md text-center mb-4">{error}</p>
-                        <button onClick={clearError} className="px-4 py-2 rounded-md bg-gem-mist hover:bg-gem-mist/70 transition-colors" title="Return to the welcome screen">
+                    <div className="flex flex-col items-center justify-center h-screen bg-surface text-primary p-4">
+                        <h1 className="text-3xl font-bold mb-4 text-red-400">Application Error</h1>
+                        <p className="max-w-md text-center mb-6 text-secondary">{error}</p>
+                        <button onClick={clearError} className="px-6 py-2 rounded-full bg-accent hover:bg-accent-hover font-semibold transition-colors" title="Return to the welcome screen">
                            Try Again
                         </button>
                     </div>
@@ -288,7 +288,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <main className="h-screen bg-gem-onyx text-gem-offwhite">
+        <main className="h-screen bg-background text-primary font-sans">
             {renderContent()}
         </main>
     );

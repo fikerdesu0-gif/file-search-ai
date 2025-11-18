@@ -19,10 +19,10 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, total, message, fil
     <div className="flex flex-col items-center justify-center h-full p-4 text-center">
         {icon && <div className="mb-8">{icon}</div>}
         <h2 className="text-2xl font-bold mb-2">{message}</h2>
-        <p className="text-gem-offwhite/70 mb-4 h-6 truncate max-w-full px-4" title={fileName}>{fileName || ''}</p>
-        <div className="w-full max-w-md bg-gem-mist rounded-full h-4 overflow-hidden">
+        <p className="text-secondary mb-4 h-6 truncate max-w-full px-4" title={fileName}>{fileName || ''}</p>
+        <div className="w-full max-w-md bg-surface rounded-full h-4 overflow-hidden border border-subtle">
             <div
-                className="bg-gem-blue h-4 rounded-full transition-all duration-300 ease-in-out animate-progress-stripes"
+                className="bg-accent h-4 rounded-full transition-all duration-300 ease-in-out animate-progress-stripes"
                 style={{ 
                     width: `${percentage}%`,
                     backgroundImage: 'linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent)',
@@ -30,7 +30,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, total, message, fil
                 }}
             ></div>
         </div>
-        <p className="mt-4 text-lg">{`${progress} / ${total}`}</p>
+        <p className="mt-4 text-lg font-mono">{`${progress} / ${total}`}</p>
     </div>
   );
 };
